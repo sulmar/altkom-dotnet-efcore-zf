@@ -36,6 +36,7 @@ namespace Altkom.ZF.ConsoleClient
         {
             Console.WriteLine("Hello .NET Core!!!!");
 
+            TagTest();
            // NonDeclareDbQueryTest();
 
             DbQueryTest();
@@ -73,15 +74,42 @@ namespace Altkom.ZF.ConsoleClient
              new LoggerFactory(new[] {new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true)});
 
 
+        // EF Core 2.2
+        private static void TagTest()
+        {
+            System.Console.WriteLine("---------------");
+            System.Console.WriteLine("Tag Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+        
+            optionsBuilder
+                .UseLoggerFactory(LoggerFactory)
+                .UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                var groups = context.Customers
+                    .GroupBy(c=>c.IsDeleted)
+                    .Select(g=>new { IsDeleted = g.Key, Count = g.Count()})
+                    .TagWith("This is my query!")
+                    .ToList();
+
+                foreach(var group in groups)
+                {
+                    System.Console.WriteLine($"IsDeleted {group.IsDeleted} Count: {group.Count}");
+                }
+            }
+
+        }
 
         private static void QueryRawSQLTest()
         {
             string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
 
             var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
-            
-    
-
+           
             optionsBuilder
                 .UseLoggerFactory(LoggerFactory)
                 .UseSqlServer(connectionString);
