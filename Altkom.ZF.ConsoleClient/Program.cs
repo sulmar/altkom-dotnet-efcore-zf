@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Altkom.ZF.Models;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 namespace Altkom.ZF.ConsoleClient
 {
@@ -32,7 +34,23 @@ namespace Altkom.ZF.ConsoleClient
 
         static async Task MainAsync(string[] args)
         {
-            Console.WriteLine("Hello .NET Core!!!!"); 
+            Console.WriteLine("Hello .NET Core!!!!");
+
+           // NonDeclareDbQueryTest();
+
+            DbQueryTest();
+
+            AddOrderTest();
+
+            AddCustomerWithAddressTest();
+
+            GlobalFilterTest();
+
+            DisableGlobalFilterTest();
+
+            PatchTest(); 
+
+            TrackGraphTest();
 
             GetMetaDataTest();
 
@@ -50,6 +68,207 @@ namespace Altkom.ZF.ConsoleClient
              Console.ReadLine();
         }
 
+        // dotnet add package Microsoft.Extensions.Logging.Console
+        public static readonly LoggerFactory LoggerFactory = 
+             new LoggerFactory(new[] {new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true)});
+
+
+
+        private static void QueryRawSQLTest()
+        {
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            
+    
+
+            optionsBuilder
+                .UseLoggerFactory(LoggerFactory)
+                .UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                var orderHeaders = context.Customers.FromSql("select * from dbo.customers");
+            }
+
+        }
+
+        private static void NonDeclareDbQueryTest()
+        {
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            
+         //   optionsBuilder.UseLoggerFactory(LoggerFactory);
+
+            optionsBuilder.UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                var orderHeaders = context.Query<OrderHeader>().ToList();
+            }
+
+        }
+
+        private static void DbQueryTest()
+        {
+             string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            optionsBuilder
+                .UseLoggerFactory(LoggerFactory)
+                .UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                var orderHeaders = context.OrderHeaders
+                    .Include(p=>p.Customer)
+                    .ToList();
+
+                foreach(var header in orderHeaders)
+                {
+                    System.Console.WriteLine($"{header.FirstName} {header.TotalAmount} {header.Customer.LastName}");
+                } 
+            }
+        }
+
+        private static void AddOrderTest()
+        {
+            Customer customer = new Customer { Id = 1 };
+
+            Order order = new Order
+            {
+                Number = "ZAM 001",
+                OrderDate = DateTime.UtcNow,
+                TotalAmount = 1000,
+                Status = OrderStatus.Draft,
+                Customer = customer
+            };
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                context.Orders.Attach(order);
+
+                foreach(var entry in context.ChangeTracker.Entries())
+                {
+                    System.Console.WriteLine($"Entity: {entry.Entity.GetType().Name} State: {entry.State}");
+                }
+
+                context.SaveChanges();
+            }
+
+
+        }
+
+
+        private static void AddCustomerWithAddressTest()
+        {
+            System.Console.WriteLine("-----------------");
+            System.Console.WriteLine("Address Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+
+            var customer = new Customer
+            {
+                FirstName = "Marcin",
+                LastName = "Sulecki",
+                ShippingAddress = new Address{
+                    City = "Czestochowa",
+                    Street = "Rolnicza 33",
+                    Country = "Poland"  
+                } 
+            };
+            
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                context.Customers.Add(customer);
+                context.SaveChanges();
+            }
+        }
+
+        private static void GlobalFilterTest()
+        {
+            System.Console.WriteLine("-----------------");
+            System.Console.WriteLine("GlobalFilterTest");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                var customer = context.Customers.Find(1);
+
+                if(customer == null)
+                {
+                    System.Console.WriteLine("Nieznaleziono");
+                }
+                else
+                 System.Console.WriteLine(customer);
+            }
+        }
+
+          private static void DisableGlobalFilterTest()
+        {
+            System.Console.WriteLine("-----------------");
+            System.Console.WriteLine("DisableGlobalFilterTest");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                var customer = context.Customers.IgnoreQueryFilters().SingleOrDefault(p=>p.Id == 1);
+
+                if(customer == null)
+                {
+                    System.Console.WriteLine("Nieznaleziono");
+                }
+                else
+                 System.Console.WriteLine(customer);
+            }
+        }
+
+
+
+        private static void PatchTest()
+        {
+            Customer customer = new Customer { Id = 1 };
+
+            customer.FirstName = "Jan";
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+
+            string propertyName = "FirstName";
+     
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                context.Entry(customer).Property(propertyName).IsModified = true;
+
+                 foreach(var entry in context.ChangeTracker.Entries())
+                {
+                    System.Console.WriteLine($"Entity: {entry.Entity.GetType().Name} State: {entry.State}");
+                }
+
+                context.SaveChanges();
+            }
+
+        }
+        
 
         private static void GetMetaDataTest()
         {
@@ -78,9 +297,48 @@ namespace Altkom.ZF.ConsoleClient
 
         }
 
+
+        private static void TrackGraphTest()
+        {
+            System.Console.WriteLine("--------------------");
+            System.Console.WriteLine("TrackGraphTest");
+
+             string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+     
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                var customer = context.Customers.First();
+
+                context.ChangeTracker.TrackGraph(customer, e => e.Entry.State = EntityState.Added);
+
+                // context.ChangeTracker.TrackGraph(customer, e => 
+                //     {
+                //         if (e.Entry.IsKeySet)
+                //         {
+                //             e.Entry.State = EntityState.Unchanged;
+                //         }
+                //         else
+                //         {
+                //             e.Entry.State = EntityState.Added;
+                //         }
+                //     }
+                // );
+
+                foreach(var entry in context.ChangeTracker.Entries())
+                {
+                    System.Console.WriteLine($"Entity: {entry.Entity.GetType().Name} State: {entry.State}");
+                }
+            }   
+        }
        
         private static void LocalNoTrackingTest()
         {
+            System.Console.WriteLine("--------------------");
+            System.Console.WriteLine("LocalNoTrackingTest");
+
              string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
 
             var optionsBuilder = new DbContextOptionsBuilder<MyContext>();

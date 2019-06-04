@@ -1,3 +1,4 @@
+using System;
 using Altkom.ZF.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -14,6 +15,14 @@ namespace Altkom.ZF.DbServices
                 .HasMaxLength(10)
                 .IsRequired()
                 .IsUnicode(true);
+
+
+            builder
+                .Property(p => p.Status)
+                .HasConversion(
+                    v => v.ToString(),
+                    v => (OrderStatus) Enum.Parse(typeof(OrderStatus), v)
+                );
         }
     }
 }
