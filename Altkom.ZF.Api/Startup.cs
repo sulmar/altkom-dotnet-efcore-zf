@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Altkom.ZF.DbServices;
+using Altkom.ZF.FakeServices;
 using Altkom.ZF.IServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,7 +31,8 @@ namespace Altkom.ZF.Api
         {
             string connectionString = Configuration.GetConnectionString("MyConnection");
 
-            services.AddScoped<ICustomersService, DbCustomersService>();
+          //  services.AddScoped<ICustomersService, DbCustomersService>();
+          services.AddScoped<ICustomersService, FakeCustomersService>();
             services.AddDbContext<MyContext>(options => options.UseSqlServer(connectionString));
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Altkom.ZF.Models
 {
@@ -12,5 +13,6 @@ namespace Altkom.ZF.Models
         public decimal TotalAmount { get; set; }
         public int CustomerId { get; set; }
         public Customer Customer { get; set; }
+      
     }
 }

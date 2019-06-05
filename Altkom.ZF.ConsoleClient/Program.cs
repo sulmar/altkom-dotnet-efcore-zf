@@ -7,6 +7,9 @@ using Altkom.ZF.Models;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using Altkom.ZF.FakeServices;
+using Z.EntityFramework.Plus;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Altkom.ZF.ConsoleClient
 {
@@ -35,6 +38,23 @@ namespace Altkom.ZF.ConsoleClient
         static async Task MainAsync(string[] args)
         {
             Console.WriteLine("Hello .NET Core!!!!");
+
+            BatchUpdateTest();
+
+            return;
+
+            MultipleAddTest();
+
+            MultipleUpdateTest();
+
+
+            GeneratingDataTest();
+
+            SetShadowPropertyTest();
+
+            CompileQueryTest();
+            
+           // SqlFunctionTest();
 
             TagTest();
            // NonDeclareDbQueryTest();
@@ -74,6 +94,286 @@ namespace Altkom.ZF.ConsoleClient
              new LoggerFactory(new[] {new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true)});
 
 
+        private static Func<MyContext, int, Customer> customerById 
+            = EF.CompileQuery((MyContext context, int customerId) 
+                => context.Customers.SingleOrDefault(c => c.Id == customerId));
+       
+
+        private static void ExplicitLoading()
+        {
+            System.Console.WriteLine("----------------");
+            System.Console.WriteLine("Explicit Loading");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString)
+                .ConfigureWarnings(options => options.Throw(RelationalEventId.QueryClientEvaluationWarning));
+
+            // dotnet add package Z.EntityFramework.Plus.EFCore
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+                var orders = context.Orders
+                    .ToList();
+
+                foreach(var order in orders)
+                {
+                    // dociagamy klienta
+                    context.Entry(order).Reference(p=>p.Customer).Load();
+
+                    // dociagamy kolekcje
+                    context.Entry(order).Collection(p=>p.Details).Load();
+                }
+                    
+
+            }
+
+
+        private static void DisableEvalutionTest()
+        {
+            System.Console.WriteLine("----------------");
+            System.Console.WriteLine("Disable Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString)
+                .ConfigureWarnings(options => options.Throw(RelationalEventId.QueryClientEvaluationWarning));
+
+            // dotnet add package Z.EntityFramework.Plus.EFCore
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+                var orders = context.Orders
+                    .Include(p=>p.Customer)
+                    .Include(p=>p.Details).ThenInclude(p=>p.Product).ThenInclude(p=>p.Image)
+                    .ToList();
+                    
+
+            }
+        }
+
+
+        private static void IncludeTest()
+        {
+            System.Console.WriteLine("----------------");
+            System.Console.WriteLine("Include Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString);
+
+            // dotnet add package Z.EntityFramework.Plus.EFCore
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+                var orders = context.Orders
+                    .Include(p=>p.Customer)
+                    .Include(p=>p.Details).ThenInclude(p=>p.Product).ThenInclude(p=>p.Image)
+                    .ToList();
+                    
+
+            }
+        }
+
+        private static void BatchUpdateTest()
+        {
+            System.Console.WriteLine("----------------");
+            System.Console.WriteLine("BatchUpdateTest");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString);
+
+            // dotnet add package Z.EntityFramework.Plus.EFCore
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+                context.Customers.Update(x => new Customer { IsDeleted = false });
+
+            }
+        }
+
+        private static void MultipleUpdateTest()
+        {
+            System.Console.WriteLine("---------------");
+            System.Console.WriteLine("Multiple Update Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+                var customers = context.Customers.IgnoreQueryFilters().ToList();
+
+                foreach(var customer in customers)
+                {
+                    customer.IsDeleted = !customer.IsDeleted;
+                }
+
+               context.Customers.UpdateRange(customers);
+                
+                context.SaveChanges();
+            }
+        }
+         private static void MultipleAddTest()
+        {
+            System.Console.WriteLine("---------------");
+            System.Console.WriteLine("Multiple Add Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString);
+
+             
+            var customerFaker = new CustomerFaker();
+
+            var customers = customerFaker.GenerateLazy(100000);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+                foreach(var customer in customers)
+                {
+                    context.Customers.Add(customer);
+                }
+                
+                context.SaveChanges();
+            }
+        }
+
+          private static void GeneratingDataTest()
+        {
+            System.Console.WriteLine("---------------");
+            System.Console.WriteLine("Generatind Data Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString);
+
+             
+            var customerFaker = new CustomerFaker();
+
+            var customers = customerFaker.Generate(1000);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+                context.Customers.AddRange(customers);
+                context.SaveChanges();
+            }
+        }
+
+        private static void SetShadowPropertyTest()
+        {
+            System.Console.WriteLine("---------------");
+            System.Console.WriteLine("Shadow Property Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+
+               var customer = new Customer
+               {
+                    FirstName = "John",
+                    LastName = "Smith",           
+               };
+
+               context.Customers.Add(customer);
+               context.Entry(customer).Property("CreatedDate").CurrentValue = DateTime.UtcNow;
+               context.SaveChanges();
+
+                System.Console.WriteLine($"{customer.FirstName}");
+
+               var customers = context.Customers
+                .OrderBy(p=>EF.Property<DateTime>(p, "CreatedDate"))
+                .ToList();
+
+            
+            }
+        }
+
+        private static void CompileQueryTest()
+        {
+          System.Console.WriteLine("---------------");
+            System.Console.WriteLine("Compile Query Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            { 
+               var customer = customerById(context, 1);
+
+               System.Console.WriteLine($"{customer.FirstName}");
+
+            
+            }
+   
+        }
+
+
         // EF Core 2.2
         private static void TagTest()
         {
@@ -83,13 +383,17 @@ namespace Altkom.ZF.ConsoleClient
             string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
 
             var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
-        
+
+             var loggerFactory = new LoggerFactory();
+                 loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level == LogLevel.Information, true));
+
             optionsBuilder
-                .UseLoggerFactory(LoggerFactory)
+                .UseLoggerFactory(loggerFactory)
                 .UseSqlServer(connectionString);
 
             using(var context = new MyContext(optionsBuilder.Options))
             {
+          
                 var groups = context.Customers
                     .GroupBy(c=>c.IsDeleted)
                     .Select(g=>new { IsDeleted = g.Key, Count = g.Count()})
@@ -103,6 +407,47 @@ namespace Altkom.ZF.ConsoleClient
             }
 
         }
+
+        private static void SqlFunctionTest()
+        {
+            System.Console.WriteLine("---------------");
+            System.Console.WriteLine("SQL Function Test");
+
+            string connectionString = "Server=127.0.0.1,1433;Database=ZFDb;User Id=sa;Password=P@ssw0rd";
+
+            var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+        
+            optionsBuilder
+                .UseLoggerFactory(LoggerFactory)
+                .UseSqlServer(connectionString);
+
+            using(var context = new MyContext(optionsBuilder.Options))
+            {
+                    // var customers = context.Customers
+                    // .Where(c  => MyContext.GetCountOrder(c.Id) > 0)    
+                    // .ToList();
+
+
+                // usage as static class 
+                var customers2 = context.Customers
+                   .Where(c  => ScalarFunctionsHelpers.GetCountOrder(c.Id) > 0)                   
+                   .ToList();
+
+                foreach(var customer in customers2)
+                {
+                    System.Console.WriteLine($"{customer.FirstName}");
+                }
+
+                // usage as extension method
+                var customers3 = context.Customers
+                   .Where(c  => c.GetCountOrder(c.Id) > 0)                   
+                   .ToList();
+
+            }
+
+        }
+
+
 
         private static void QueryRawSQLTest()
         {

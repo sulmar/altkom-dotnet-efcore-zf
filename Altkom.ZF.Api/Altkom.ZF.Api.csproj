@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Altkom.ZF.IServices\Altkom.ZF.IServices.csproj" />
     <ProjectReference Include="..\Altkom.ZF.Models\Altkom.ZF.Models.csproj" />
     <ProjectReference Include="..\Altkom.ZF.DbServices\Altkom.ZF.DbServices.csproj" />
+    <ProjectReference Include="..\Altkom.ZF.FakeServices\Altkom.ZF.FakeServices.csproj" />
   </ItemGroup>
 
 </Project>

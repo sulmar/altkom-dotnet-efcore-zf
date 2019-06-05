@@ -23,6 +23,9 @@ namespace Altkom.ZF.DbServices
                     v => v.ToString(),
                     v => (OrderStatus) Enum.Parse(typeof(OrderStatus), v)
                 );
+
+            builder.Property(p=>p.OrderDate)
+                .HasDefaultValueSql("GETDATE()");
         }
     }
 }

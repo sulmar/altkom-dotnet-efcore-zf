@@ -47,7 +47,19 @@ namespace Altkom.ZF.DbServices
 
             builder.Property(p=>p.ShippingAddress)
                 .HasConversion(new JsonValueConverter<Address>());
-        
+
+            // Shadow property
+            builder.Property<DateTime>("CreatedDate");
+
+            builder
+                .HasIndex(p => new { p.FirstName, p.LastName } )
+                .HasName("IX_FirstName_LastName");
+
+
+            builder.Property(p=>p.Salary)
+                 .HasDefaultValue(100);
+
+           
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Altkom.ZF.Models
 {
@@ -13,6 +14,8 @@ namespace Altkom.ZF.Models
         public DateTime? DeliveryDate { get; set; }
 
         public decimal TotalAmount { get; set; }
+
+        public ICollection<OrderDetail> Details { get; set; }
 
         public OrderStatus Status { get; set; }
     }
