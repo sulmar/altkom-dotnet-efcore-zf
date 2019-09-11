@@ -63,10 +63,11 @@ private static void CreateDbTest()
 
     // string connectionString = Configuration.GetConnectionString("MyConnectionString");
 
-    var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
-    optionsBuilder.UseSqlServer(connectionString);
+    var options = new DbContextOptionsBuilder<MyContext>()
+        .UseSqlServer(connectionString)
+        .Options;
 
-    using (var context = new MyContext(optionsBuilder.Options))
+    using (var context = new MyContext(options))
     {
         bool created = context.Database.EnsureCreated(); 
 
