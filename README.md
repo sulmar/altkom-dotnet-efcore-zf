@@ -872,6 +872,7 @@ public class MyContext : DbContext
             .Property<DateTime>("LastUpdated");
     }
 }
+~~~
 
 ## Ustawianie wartości Shadow Properties 
 
