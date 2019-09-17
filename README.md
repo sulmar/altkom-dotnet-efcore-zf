@@ -14,8 +14,8 @@ Przykłady ze szkolenia EF Core 2.2
 - ``` dotnet test ``` - uruchomienie testów jednostkowych
 - ``` dotnet run watch``` - uruchomienie projektu w trybie śledzenia zmian
 - ``` dotnet test ``` - uruchomienie testów jednostkowych w trybie śledzenia zmian
-- ``` dotnet add {project.csproj} referencje {library.csproj} ``` - dodanie odwołania do biblioteki
-- ``` dotnet remove {project.csproj} referencje {library.csproj} ``` - usunięcie odwołania do biblioteki
+- ``` dotnet add {project.csproj} reference {library.csproj} ``` - dodanie odwołania do biblioteki
+- ``` dotnet remove {project.csproj} reference {library.csproj} ``` - usunięcie odwołania do biblioteki
 - ``` dotnet new sln ``` - utworzenie nowego rozwiązania
 - ``` dotnet sln {solution.sln} add {project.csproj}``` - dodanie projektu do rozwiązania
 - ``` dotnet sln {solution.sln} remove {project.csproj}``` - usunięcie projektu z rozwiązania
