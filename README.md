@@ -23,8 +23,7 @@ Przykłady ze szkolenia EF Core 2.2
 - ``` dotnet publish -c Release -r win10-x64``` - publikacja aplikacji dla Windows
 - ``` dotnet publish -c Release -r linux-x64``` - publikacja aplikacji dla Linux
 - ``` dotnet publish -c Release -r osx-x64``` - publikacja aplikacji dla MacOS
-
-
+- ``` dotnet add package {package}``` - dodanie pakietu NuGet do projektu
 
 # Entity Framework Core
 
